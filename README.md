@@ -1,6 +1,7 @@
 btc-arbitrage
 =============
-(private fork of bitcoin-arbitrage)
+(main private fork of bitcoin-arbitrage) - will run independently
+IRC version found here: https://github.com/kafitz/bitbot
 
 
 Ideally the btc-arbitrage bot will be automated and can be controlled via irc. That means first off, we should probably
