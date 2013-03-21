@@ -1,6 +1,6 @@
 btc-arbitrage
 =============
-(main private fork of bitcoin-arbitrage) - will run independently
+(main private fork of bitcoin-arbitrage) - will run independently <br />
 IRC version found here: https://github.com/kafitz/bitbot
 
 
