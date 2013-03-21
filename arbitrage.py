@@ -4,7 +4,6 @@ import config
 import time
 import logging
 import json
-import sqlite3
 
 
 class Arbitrer(object):
@@ -159,19 +158,6 @@ class Arbitrer(object):
             self.tickers()
             self.tick()
             time.sleep(30)
-            
-    def database(self):
-        conn = sqlite3.connect("arb.db")
-        cursor = conn.cursor()
-        cursor.execute("""CREATE TABLE IF NOT EXISTS deals
-                  (time datetime, profit float, volume float, 
-                   buy_price float, buy_market text,
-                   sell_price float, sell_market text, ratio float) 
-               """)
-        #deal = ('2013-03-21 23:25:55,093', 3.047132, 3.509183, 58.9889, 'IntersangoEUR', 59.0000, 'BitcoinCentralEUR', 1.47)
-        cursor.execute("INSERT INTO deals VALUES (?,?,?,?,?,?,?,?)", deal)
-        conn.commit()
-
 
 def main():
     import argparse
