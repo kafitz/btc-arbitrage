@@ -19,7 +19,7 @@ Extending btc-arbitrage to include our own math can be done through editing *def
 
 
 
-Code layout:
+###### Code layout:
 
 *classes:*
 ![Image](https://github.com/kafitz/btc-arbitrage/blob/master/UML/classes_Arbitrage.png?raw=true)
