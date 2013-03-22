@@ -17,7 +17,10 @@ Extending btc-arbitrage to include our own math can be done through editing *def
 - kbid: *string* of exchange2's name
 - bid: dict of highest big price and available volume - {'price': 56.0932, 'amount': 14.5}
 
-
+**Needed features:**
+- [ ] Built-in fee calculator. First step, gathering a spreadsheet of fees for each exchange we use and add that as attributes to their public_market class. Then include that information in the arbitrage_opportunity() calculation.
+- [ ] A system to keep track of our balances at each exchange. This way it can be intelligent in only notifying us of transactions we are currently able to make. We should still probably keep track of the transactions we cannot make so we can deem if we feel its worth it to directly wire money to the exchange to exploit some arbitrage opportunities.
+- [ ] Separate bitbot irc code from btc-arbitrage and have them communicate some other way so that we dont have to update two versions of the same project. This is debatable.
 
 ###### Code layout:
 
