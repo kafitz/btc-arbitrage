@@ -11,8 +11,11 @@ class MtGoxUSD(Market):
         self.depth = {'asks': [{'price': 0, 'amount': 0}], 'bids': [{'price': 0, 'amount': 0}]}
 
     def update_depth(self):
-        res = urllib2.urlopen('http://data.mtgox.com/api/1/BTCUSD/depth/fetch')
-        jsonstr = res.read()
+        try:
+            res = urllib2.urlopen('http://data.mtgox.com/api/1/BTCUSD/depth/fetch')
+            jsonstr = res.read()
+        except Exception, e:
+            print e
         try:
             data = json.loads(jsonstr)
         except Exception:
