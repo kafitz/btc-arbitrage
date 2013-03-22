@@ -153,7 +153,7 @@ class Arbitrer(object):
                 market1 = self.depths[kmarket1]
                 market2 = self.depths[kmarket2]
                 # spammy debug command for testing if there is no market liquidity
-                print "Is " + kmarket1 + " at " + str(market1["asks"][0]['price']) + " less than " + kmarket2 + " at " + str(market2["bids"][0]['price']) + "?"
+                # print "Is " + kmarket1 + " at " + str(market1["asks"][0]['price']) + " less than " + kmarket2 + " at " + str(market2["bids"][0]['price']) + "?"
                 if float(market1["asks"][0]['price']) < float(market2["bids"][0]['price']):
                     self.arbitrage_opportunity(kmarket1, market1["asks"][0], kmarket2, market2["bids"][0])
 
