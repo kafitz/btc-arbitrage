@@ -1,17 +1,12 @@
 from market import Market
 import time
-import base64
-import hmac
 import urllib
 import urllib2
-import hashlib
 import sys
 import json
 sys.path.append('../')
 sys.path.append('.')
 import config
-import re
-from decimal import Decimal
 
 
 class PrivateBitstamp(Market):
@@ -24,38 +19,10 @@ class PrivateBitstamp(Market):
 
     def __init__(self):
         super(Market, self).__init__()
-        self.key = config.bitstamp_key
-        self.secret = config.bitstamp_secret
+        self.user = config.bitstamp_user
+        self.password = config.bitstamp_password
         self.currency = "USD"
-        self.get_info()
-
-    def _create_nonce(self):
-        return int(time.time() * 1000000)
-
-    def _change_currency_url(self, url, currency):
-        return re.sub(r'BTC\w{3}', r'BTC' + currency, url)
-
-    def _to_int_price(self, price, currency):
-        ret_price = None
-        if currency in ["USD", "EUR", "GBP", "PLN", "CAD", "AUD", "CHF", "CNY",
-                        "NZD", "RUB", "DKK", "HKD", "SGD", "THB"]:
-            ret_price = Decimal(price)
-            ret_price = int(price * 100000)
-        elif currency in ["JPY", "SEK"]:
-            ret_price = Decimal(price)
-            ret_price = int(price * 1000)
-        return ret_price
-
-    def _to_int_amount(self, amount):
-        amount = Decimal(amount)
-        return int(amount * 100000000)
-
-    def _from_int_amount(self, amount):
-        return Decimal(amount) / Decimal(100000000.)
-
-    def _from_int_price(self, amount):
-        # FIXME: should take JPY and SEK into account
-        return Decimal(amount) / Decimal(100000.)
+        #self.get_info()
 
     def _send_request(self, url, params, extra_headers=None):
         headers = {
@@ -99,8 +66,7 @@ class PrivateBitstamp(Market):
         return self.trade(amount, "ask", price)
 
     def get_info(self):
-        #params = [("nonce", self._create_nonce())]
-        params = {"user": self.key, "password": self.secret}
+        params = {"user": self.user, "password": self.password}
         response = self._send_request(self.info_url, params)
 
         if response:
@@ -120,5 +86,5 @@ class PrivateBitstamp(Market):
 
 if __name__ == "__main__":
     bitstamp = PrivateBitstamp()
-    #bitstamp.get_info()
+    bitstamp.get_info()
     print bitstamp
