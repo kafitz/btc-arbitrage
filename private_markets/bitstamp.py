@@ -38,38 +38,30 @@ class PrivateBitstamp(Market):
         response = urllib2.urlopen(req)
         if response.getcode() == 200:
             jsonstr = response.read()
+            print jsonstr
             return json.loads(jsonstr)
         return None
 
-    def trade(self, amount, ttype, price=None):
-        if price:
-            price = self._to_int_price(price, self.currency)
-        amount = self._to_int_amount(amount)
-
-        self.buy_url["url"] = self._change_currency_url(self.buy_url["url"], self.currency)
-
-        params = [("nonce", self._create_nonce()),
-                  ("amount_int", str(amount)),
-                  ("type", ttype)]
-        if price:
-            params.append(("price_int", str(price)))
-
-        response = self._send_request(self.buy_url, params)
+    def trade(self, amount, url, price):
+        # Next line is commented out to avoid accidental trades, use with caution
+        #params = {"user": self.user, "password": self.password, "amount": str(self.amount), "price": str(self.price)}
+        response = self._send_request(self.url, params)
+        print response
         if response and "result" in response and response["result"] == "success":
             return response["return"]
         return None
 
-    def buy(self, amount, price=None):
-        return self.trade(amount, "bid", price)
+    def buy(self, amount, price):
+        return self.trade(amount, buy_url, price)
 
-    def sell(self, amount, price=None):
-        return self.trade(amount, "ask", price)
+    def sell(self, amount, price):
+        return self.trade(amount, sell_url, price)
 
     def get_info(self):
         params = {"user": self.user, "password": self.password}
         response = self._send_request(self.info_url, params)
 
-        if response:
+        if response and "error" not in response:
             self.usd_balance = float(response["usd_balance"])
             self.btc_balance = float(response["btc_balance"])
             self.usd_reserved = float(response["usd_reserved"])
@@ -77,6 +69,10 @@ class PrivateBitstamp(Market):
             self.usd_available = float(response["usd_available"])
             self.btc_available = float(response["btc_balance"])
             self.fee = float(response["fee"])
+            return 1
+        else:
+            self.error = str(response["error"])
+            print self.error
             return 1
         return None
 
