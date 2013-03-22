@@ -38,7 +38,6 @@ class PrivateBitstamp(Market):
         response = urllib2.urlopen(req)
         if response.getcode() == 200:
             jsonstr = response.read()
-            print jsonstr
             return json.loads(jsonstr)
         return None
 
