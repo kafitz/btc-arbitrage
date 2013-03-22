@@ -29,9 +29,12 @@ class Arbitrer(object):
             self.observers.append(observer)
 
     def get_profit_for(self, mi, mj, kask, kbid):
+        # check to make sure input selling price is actually greater than asking price
         if self.depths[kask]["asks"][mi]["price"] >= self.depths[kbid]["bids"][mj]["price"]:
             return 0, 0, 0, 0
 
+        # get the maximums available to buy or sell as determined by the market or the
+        # transaction limit set in the config
         max_amount_buy = 0
         for i in range(mi + 1):
             max_amount_buy += self.depths[kask]["asks"][i]["amount"]
@@ -58,7 +61,7 @@ class Arbitrer(object):
         for j in range(mj + 1):
             price = self.depths[kbid]["bids"][j]["price"]
             amount = min(max_amount, sell_total + self.depths[kbid]["bids"][j]["amount"]) - sell_total
-            if amount < 0:
+            if amount <= 0:
                 break
             sell_total += amount
             if w_sellprice == 0:
