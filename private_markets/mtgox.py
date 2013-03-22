@@ -60,8 +60,7 @@ class PrivateMtGox(Market):
     def _send_request(self, url, params, extra_headers=None):
         headers = {
             'Rest-Key': self.key,
-            'Rest-Sign': base64.b64encode(str(hmac.new(base64.b64decode(self.secret),
-                                                       urllib.urlencode(params), hashlib.sha512).digest())),
+            'Rest-Sign': base64.b64encode(str(hmac.new(base64.b64decode(self.secret), urllib.urlencode(params), hashlib.sha512).digest())),
             'Content-type': 'application/x-www-form-urlencoded',
             'Accept': 'application/json, text/javascript, */*; q=0.01',
             'User-Agent': 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'

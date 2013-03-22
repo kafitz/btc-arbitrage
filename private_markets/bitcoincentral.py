@@ -43,12 +43,13 @@ class PrivateBitcoinCentral(Market):
         else:
             req = urllib2.Request(url, headers=headers)
         base64string = base64.encodestring('%s:%s' % (self.username, self.password)).replace('\n', '')
-        req.add_header("Authorization", "Basic %s" % base64string)
+        req.add_header("Authorization", "Basic %s==" % base64string)
         code = 422
         try:
             response = urllib2.urlopen(req)
             code = response.getcode()
         except urllib2.HTTPError, e:
+            print e
             code = 422
         if code == 200:
             jsonstr = response.read()
@@ -75,13 +76,20 @@ class PrivateBitcoinCentral(Market):
         if response:
             self.btc_balance = Decimal(response["BTC"])
             self.eur_balance = Decimal(response["EUR"])
+            self.usd_balance = Decimal(response["USD"])
+            self.gbp_balance = Decimal(response["GBP"])
 
     def __str__(self):
-        return str({"btc_balance": self.btc_balance, "eur_balance": self.eur_balance})
+        return str({"btc_balance": self.btc_balance, "eur_balance": self.eur_balance,
+                    "usd_balance": self.usd_balance, "gbp_balance": self.gbp_balance})
 
 
 if __name__ == "__main__":
-    mtgox = PrivateBitcoinCentral()
-#    mtgox.buy(0.01)
-#    mtgox.sell(0.01)
-    print mtgox
+    bitcoincentral = PrivateBitcoinCentral()
+    # bitcoincentral.buy(0.01)
+    # bitcoincentral.sell(0.01)
+    try:
+        print bitcoincentral
+    except:
+        print "Bitcoin-central error. Check that username and password is set in config."
+    
