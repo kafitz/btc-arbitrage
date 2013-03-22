@@ -123,7 +123,10 @@ class Arbitrer(object):
 
     def tickers(self):
         for market in self.markets:
-            logging.debug("ticker: " + market.name + " - " + str(market.get_ticker()))
+            try:
+                logging.debug("ticker: " + market.name + " - " + str(market.get_ticker()))
+            except:
+                logging.debug("error: unable to get ticker for " + market.name)
 
     def replay_history(self, directory):
         import os
