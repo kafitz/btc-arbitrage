@@ -1,5 +1,4 @@
 from market import Market
-import time
 import urllib
 import urllib2
 import sys
@@ -13,7 +12,7 @@ class PrivateBitstamp(Market):
     ticker_url = {"method": "GET", "url": "https://www.bitstamp.net/api/ticker/"}
     buy_url = {"method": "POST", "url": "https://www.bitstamp.net/api/buy/"}
     sell_url = {"method": "POST", "url": "https://www.bitstamp.net/api/sell/"}
-    order_url = {"method": "GET", "url": "https://www.bitstamp.net/api/user_transactions/"}
+    tx_url = {"method": "GET", "url": "https://www.bitstamp.net/api/user_transactions/"}
     open_orders_url = {"method": "POST", "url": "https://www.bitstamp.net/api/open_orders/"}
     info_url = {"method": "POST", "url": "https://www.bitstamp.net/api/balance/"}
 
@@ -61,6 +60,7 @@ class PrivateBitstamp(Market):
         response = self._send_request(self.info_url, params)
 
         if response and "error" not in response:
+            print response
             self.usd_balance = float(response["usd_balance"])
             self.btc_balance = float(response["btc_balance"])
             self.usd_reserved = float(response["usd_reserved"])
@@ -74,12 +74,28 @@ class PrivateBitstamp(Market):
             print self.error
             return 1
         return None
-
-    def __str__(self):
-        return str({"usd_balance": self.usd_balance, "btc_balance": self.btc_balance, "usd_reserved": self.usd_reserved, "btc_reserved": self.btc_reserved, "usd_available": self.usd_available, "btc_available": self.btc_available, "fee": self.fee})
-
+        
+    def get_txs(self):
+        params = {"user": self.user, "password": self.password}
+        response = self._send_request(self.tx_url, params)
+        
+        if response and "error" not in response:
+            for tx in response:
+                print tx
+                self.datetime = str(tx["datetime"])
+                self.id = int(tx["id"])
+                self.type = int(tx["type"])
+                self.usd = float(tx["usd"])
+                self.btc = float(tx["btc"])
+                self.fee = float(tx["fee"])
+            return 1
+        else:
+            self.error = str(response["error"])
+            print self.error
+            return 1
+        return None
 
 if __name__ == "__main__":
     bitstamp = PrivateBitstamp()
     bitstamp.get_info()
-    print bitstamp
+    bitstamp.get_txs()
