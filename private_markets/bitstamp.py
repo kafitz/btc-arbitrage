@@ -13,7 +13,7 @@ class PrivateBitstamp(Market):
     buy_url = {"method": "POST", "url": "https://www.bitstamp.net/api/buy/"}
     sell_url = {"method": "POST", "url": "https://www.bitstamp.net/api/sell/"}
     tx_url = {"method": "GET", "url": "https://www.bitstamp.net/api/user_transactions/"}
-    open_orders_url = {"method": "POST", "url": "https://www.bitstamp.net/api/open_orders/"}
+    orders_url = {"method": "POST", "url": "https://www.bitstamp.net/api/open_orders/"}
     info_url = {"method": "POST", "url": "https://www.bitstamp.net/api/balance/"}
 
     def __init__(self):
@@ -94,8 +94,32 @@ class PrivateBitstamp(Market):
             print self.error
             return 1
         return None
+    
+    def get_orders(self):
+        params = {"user": self.user, "password": self.password}
+        response = self._send_request(self.orders_url, params)
+        print response
+        
+        if response and "error" not in response:
+            for order in response:
+                print order
+                self.datetime = str(order["datetime"])
+                self.id = int(order["id"])
+                self.type = int(order["type"])
+                self.price = float(order["price"])
+                self.amount = float(order["amount"])
+            return 1
+        elif "error" in response:
+            self.error = str(response["error"])
+            print self.error
+            return 1
+        return None
 
 if __name__ == "__main__":
     bitstamp = PrivateBitstamp()
+    print "Balance:"
     bitstamp.get_info()
+    print "Transactions:"
     bitstamp.get_txs()
+    print "Open orders:"
+    bitstamp.get_orders()
