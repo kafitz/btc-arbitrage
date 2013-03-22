@@ -59,9 +59,6 @@ class PrivateBitstamp(Market):
 
     def _send_request(self, url, params, extra_headers=None):
         headers = {
-            'Rest-Key': self.key,
-            'Rest-Sign': base64.b64encode(str(hmac.new(base64.b64decode(self.secret),
-                                                       urllib.urlencode(params), hashlib.sha512).digest())),
             'Content-type': 'application/x-www-form-urlencoded',
             'Accept': 'application/json, text/javascript, */*; q=0.01',
             'User-Agent': 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'
@@ -69,7 +66,7 @@ class PrivateBitstamp(Market):
         if extra_headers is not None:
             for k, v in extra_headers.iteritems():
                 headers[k] = v
-
+        
         req = urllib2.Request(url['url'], urllib.urlencode(params), headers)
         response = urllib2.urlopen(req)
         if response.getcode() == 200:
@@ -102,19 +99,26 @@ class PrivateBitstamp(Market):
         return self.trade(amount, "ask", price)
 
     def get_info(self):
-        params = [("nonce", self._create_nonce())]
+        #params = [("nonce", self._create_nonce())]
+        params = {"user": self.key, "password": self.secret}
         response = self._send_request(self.info_url, params)
-        if response and "result" in response and response["result"] == "success":
-            self.btc_balance = self._from_int_amount(int(response["return"]["Wallets"]["BTC"]["Balance"]["value_int"]))
-            self.usd_balance = self._from_int_price(int(response["return"]["Wallets"]["USD"]["Balance"]["value_int"]))
+
+        if response:
+            self.usd_balance = float(response["usd_balance"])
+            self.btc_balance = float(response["btc_balance"])
+            self.usd_reserved = float(response["usd_reserved"])
+            self.btc_reserved = float(response["btc_reserved"])
+            self.usd_available = float(response["usd_available"])
+            self.btc_available = float(response["btc_balance"])
+            self.fee = float(response["fee"])
             return 1
         return None
 
     def __str__(self):
-        return str({"btc_balance": self.btc_balance, "usd_balance": self.usd_balance})
+        return str({"usd_balance": self.usd_balance, "btc_balance": self.btc_balance, "usd_reserved": self.usd_reserved, "btc_reserved": self.btc_reserved, "usd_available": self.usd_available, "btc_available": self.btc_available, "fee": self.fee})
 
 
 if __name__ == "__main__":
     bitstamp = PrivateBitstamp()
-    bitstamp.get_info()
+    #bitstamp.get_info()
     print bitstamp
