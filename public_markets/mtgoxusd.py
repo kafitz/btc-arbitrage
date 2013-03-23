@@ -14,10 +14,7 @@ class MtGoxUSD(Market):
         try:
             res = urllib2.urlopen('http://data.mtgox.com/api/1/BTCUSD/depth/fetch')
             jsonstr = res.read()
-        except Exception, e:
-            print e
-        try:
-            data = json.loads(jsonstr)
+            data = json.loads(jsonstr) 
         except Exception:
             logging.error("%s - Can't parse json: %s" % (self.name, jsonstr))
         if data["result"] == "success":
