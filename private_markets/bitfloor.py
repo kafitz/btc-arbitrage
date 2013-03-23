@@ -21,6 +21,7 @@ class PrivateBitfloor(Market):
     order_url = {"method": "POST", "url": "https://api.bitfloor.com/order/details"}
     open_orders_url = {"method": "POST", "url": "https://api.bitfloor.com/orders"}
     info_url = {"method": "POST", "url": "https://api.bitfloor.com/accounts"}
+    withdraw_url = {"method": "POST", "url": "https://testnet.bitfloor.com/withdraw"}
 
     def __init__(self):
         super(Market, self).__init__()
@@ -114,6 +115,15 @@ class PrivateBitfloor(Market):
                     self.usd_balance = float(wallet['amount'])
             return 1
         return None
+        
+    def withdraw(self, amount, destination):
+        params = [("currency", "BTC"), ("method", "bitcoin"), ("amount", amount), ("destination", destination)]
+        response = self._send_request(self.withdraw_url, params)
+        if response:
+            print response
+            return 1
+        return None
+        
 
     def __str__(self):
         return str({"btc_balance": self.btc_balance, "usd_balance": self.usd_balance})
@@ -123,3 +133,4 @@ if __name__ == "__main__":
     bitfloor = PrivateBitfloor()
     bitfloor.get_info()
     print bitfloor
+    #bitfloor.withdraw(0,"1E774iqGeTrr7GUP1L6jpwDsWg1pERQhNo")
