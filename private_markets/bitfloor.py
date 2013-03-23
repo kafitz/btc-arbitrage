@@ -15,19 +15,20 @@ from decimal import Decimal
 
 
 class PrivateBitfloor(Market):
-    ticker_url = {"method": "GET", "url": "https://bitfloor.com/api/1/BTCUSD/public/ticker"}
-    buy_url = {"method": "POST", "url": "https://bitfloor.com/api/1/BTCUSD/private/order/add"}
-    sell_url = {"method": "POST", "url": "https://bitfloor.com/api/1/BTCUSD/private/order/add"}
-    order_url = {"method": "POST", "url": "https://bitfloor.com/api/1/generic/private/order/result"}
-    open_orders_url = {"method": "POST", "url": "https://bitfloor.com/api/1/generic/private/orders"}
-    info_url = {"method": "POST", "url": "https://bitfloor.com/api/1/generic/private/info"}
+    ticker_url = {"method": "GET", "url": ""}
+    buy_url = {"method": "POST", "url": "https://api.bitfloor.com/order/new"}
+    sell_url = {"method": "POST", "url": "https://api.bitfloor.com/order/new"}
+    order_url = {"method": "POST", "url": "https://api.bitfloor.com/order/details"}
+    open_orders_url = {"method": "POST", "url": "https://api.bitfloor.com/orders"}
+    info_url = {"method": "POST", "url": "https://api.bitfloor.com/accounts"}
 
     def __init__(self):
         super(Market, self).__init__()
         self.key = config.bitfloor_key
         self.secret = config.bitfloor_secret
-        self.currency = "EUR"
-        self.get_info()
+        self.passphrase = config.bitfloor_passphrase
+        self.currency = "USD"
+        #self.get_info()
 
     def _create_nonce(self):
         return int(time.time() * 1000000)
@@ -59,8 +60,10 @@ class PrivateBitfloor(Market):
 
     def _send_request(self, url, params, extra_headers=None):
         headers = {
-            'Rest-Key': self.key,
-            'Rest-Sign': base64.b64encode(str(hmac.new(base64.b64decode(self.secret), urllib.urlencode(params), hashlib.sha512).digest())),
+            'bitfloor-key': self.key,
+            'bitfloor-sign': base64.b64encode(str(hmac.new(base64.b64decode(self.secret), urllib.urlencode(params), hashlib.sha512).digest())),
+            'bitfloor-passphrase':  self.passphrase,
+            'bitfloor-version': 1,
             'Content-type': 'application/x-www-form-urlencoded',
             'Accept': 'application/json, text/javascript, */*; q=0.01',
             'User-Agent': 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'
@@ -103,14 +106,17 @@ class PrivateBitfloor(Market):
     def get_info(self):
         params = [("nonce", self._create_nonce())]
         response = self._send_request(self.info_url, params)
-        if response and "result" in response and response["result"] == "success":
-            self.btc_balance = self._from_int_amount(int(response["return"]["Wallets"]["BTC"]["Balance"]["value_int"]))
-            self.eur_balance = self._from_int_price(int(response["return"]["Wallets"]["EUR"]["Balance"]["value_int"]))
+        if response:
+            for wallet in response:
+                if str(wallet['currency']) == 'BTC':
+                    self.btc_balance = float(wallet['amount'])
+                elif str(wallet['currency']) == 'USD':
+                    self.usd_balance = float(wallet['amount'])
             return 1
         return None
 
     def __str__(self):
-        return str({"btc_balance": self.btc_balance, "eur_balance": self.eur_balance})
+        return str({"btc_balance": self.btc_balance, "usd_balance": self.usd_balance})
 
 
 if __name__ == "__main__":
