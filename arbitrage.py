@@ -26,7 +26,7 @@ class Arbitrer(object):
     
     def init_private_markets(self, private_markets):
         self.market_names = private_markets
-        for market_name in markets:
+        for market_name in private_markets:
             exec('import private_markets.' + market_name.lower())
             private_market = eval('private_markets.' + market_name.lower() + '.' + market_name + '()')
             self.markets.append(private_market)
