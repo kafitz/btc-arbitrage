@@ -14,20 +14,20 @@ import re
 from decimal import Decimal
 
 
-class PrivateMtGox(Market):
-    ticker_url = {"method": "GET", "url": "https://mtgox.com/api/1/BTCUSD/public/ticker"}
-    buy_url = {"method": "POST", "url": "https://mtgox.com/api/1/BTCUSD/private/order/add"}
-    sell_url = {"method": "POST", "url": "https://mtgox.com/api/1/BTCUSD/private/order/add"}
-    order_url = {"method": "POST", "url": "https://mtgox.com/api/1/generic/private/order/result"}
-    open_orders_url = {"method": "POST", "url": "https://mtgox.com/api/1/generic/private/orders"}
-    info_url = {"method": "POST", "url": "https://mtgox.com/api/1/generic/private/info"}
+class PrivateBitfloor(Market):
+    ticker_url = {"method": "GET", "url": "https://bitfloor.com/api/1/BTCUSD/public/ticker"}
+    buy_url = {"method": "POST", "url": "https://bitfloor.com/api/1/BTCUSD/private/order/add"}
+    sell_url = {"method": "POST", "url": "https://bitfloor.com/api/1/BTCUSD/private/order/add"}
+    order_url = {"method": "POST", "url": "https://bitfloor.com/api/1/generic/private/order/result"}
+    open_orders_url = {"method": "POST", "url": "https://bitfloor.com/api/1/generic/private/orders"}
+    info_url = {"method": "POST", "url": "https://bitfloor.com/api/1/generic/private/info"}
 
     def __init__(self):
         super(Market, self).__init__()
-        self.key = config.mtgox_key
-        self.secret = config.mtgox_secret
-        self.currency = "USD"
-        #self.get_info()
+        self.key = config.bitfloor_key
+        self.secret = config.bitfloor_secret
+        self.currency = "EUR"
+        self.get_info()
 
     def _create_nonce(self):
         return int(time.time() * 1000000)
@@ -105,16 +105,15 @@ class PrivateMtGox(Market):
         response = self._send_request(self.info_url, params)
         if response and "result" in response and response["result"] == "success":
             self.btc_balance = self._from_int_amount(int(response["return"]["Wallets"]["BTC"]["Balance"]["value_int"]))
-            self.usd_balance = self._from_int_price(int(response["return"]["Wallets"]["USD"]["Balance"]["value_int"]))
-            self.fee = float(response["return"]["Trade_Fee"])
+            self.eur_balance = self._from_int_price(int(response["return"]["Wallets"]["EUR"]["Balance"]["value_int"]))
             return 1
         return None
 
     def __str__(self):
-        return str({"btc_balance": self.btc_balance, "usd_balance": self.usd_balance,"trade fee": self.fee})
+        return str({"btc_balance": self.btc_balance, "eur_balance": self.eur_balance})
 
 
 if __name__ == "__main__":
-    mtgox = PrivateMtGox()
-    mtgox.get_info()
-    print mtgox
+    bitfloor = PrivateBitfloor()
+    bitfloor.get_info()
+    print bitfloor

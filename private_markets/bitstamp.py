@@ -60,7 +60,6 @@ class PrivateBitstamp(Market):
         response = self._send_request(self.info_url, params)
 
         if response and "error" not in response:
-            print response
             self.usd_balance = float(response["usd_balance"])
             self.btc_balance = float(response["btc_balance"])
             self.usd_reserved = float(response["usd_reserved"])
@@ -114,12 +113,11 @@ class PrivateBitstamp(Market):
             print self.error
             return 1
         return None
+        
+    def __str__(self):
+        return str({"btc_balance": self.btc_balance, "usd_balance": self.usd_balance, "trade fee": self.fee})
 
 if __name__ == "__main__":
     bitstamp = PrivateBitstamp()
-    print "Balance:"
     bitstamp.get_info()
-    print "Transactions:"
-    bitstamp.get_txs()
-    print "Open orders:"
-    bitstamp.get_orders()
+    print bitstamp
