@@ -33,8 +33,8 @@ class Arbitrer(object):
         if self.depths[kask]["asks"][mi]["price"] >= self.depths[kbid]["bids"][mj]["price"]:
             return 0, 0, 0, 0
 
-        # get the maximums available to buy or sell as determined by the market or the
-        # transaction limit set in the config
+        # get the maximum amount of asks or bids that can current be filled by
+        # the market within our spread
         max_amount_buy = 0
         for i in range(mi + 1):
             max_amount_buy += self.depths[kask]["asks"][i]["amount"]

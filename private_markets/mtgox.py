@@ -7,9 +7,6 @@ import urllib2
 import hashlib
 import sys
 import json
-sys.path.append('../')
-sys.path.append('.')
-import config
 import re
 from decimal import Decimal
 
@@ -24,8 +21,8 @@ class PrivateMtGox(Market):
 
     def __init__(self):
         super(Market, self).__init__()
-        self.key = config.mtgox_key
-        self.secret = config.mtgox_secret
+        self.key = self.config.mtgox_key
+        self.secret = self.config.mtgox_secret
         self.currency = "USD"
         self.initials = "mtgx"
         #self.get_info()

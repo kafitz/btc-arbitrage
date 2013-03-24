@@ -3,9 +3,6 @@ import urllib
 import urllib2
 import sys
 import json
-sys.path.append('../')
-sys.path.append('.')
-import config
 
 
 class PrivateBitstamp(Market):
@@ -18,8 +15,8 @@ class PrivateBitstamp(Market):
 
     def __init__(self):
         super(Market, self).__init__()
-        self.user = config.bitstamp_user
-        self.password = config.bitstamp_password
+        self.user = self.config.bitstamp_user
+        self.password = self.config.bitstamp_password
         self.currency = "USD"
         self.initials = "bstp"
         #self.get_info()

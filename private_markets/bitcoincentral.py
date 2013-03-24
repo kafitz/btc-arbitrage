@@ -7,9 +7,6 @@ import urllib2
 import hashlib
 import sys
 import json
-sys.path.append('../')
-sys.path.append('.')
-import config
 from decimal import Decimal
 
 
@@ -18,9 +15,10 @@ class PrivateBitcoinCentral(Market):
     trade_url = "https://bitcoin-central.net/api/v1/trade_orders/"
 
     def __init__(self):
+        super(Market, self).__init__()
         self.name = self.__class__.__name__
-        self.username = config.bitcoincentral_username
-        self.password = config.bitcoincentral_password
+        self.username = self.config.bitcoincentral_username
+        self.password = self.config.bitcoincentral_password
         self.currency = "USD"
         self.initials = "bctl"
         self.get_info()

@@ -7,9 +7,6 @@ import urllib2
 import hashlib
 import sys
 import json
-sys.path.append('../')
-sys.path.append('.')
-import config
 import re
 from decimal import Decimal
 
@@ -25,9 +22,9 @@ class PrivateBitfloor(Market):
 
     def __init__(self):
         super(Market, self).__init__()
-        self.key = config.bitfloor_key
-        self.secret = config.bitfloor_secret
-        self.passphrase = config.bitfloor_passphrase
+        self.key = self.config.bitfloor_key
+        self.secret = self.config.bitfloor_secret
+        self.passphrase = self.config.bitfloor_passphrase
         self.currency = "USD"
         self.initials = "bflr"
         #self.get_info()

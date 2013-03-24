@@ -1,4 +1,11 @@
+import sys
+sys.path.append('../')
+sys.path.append('.')
+import config
+
 class Market(object):
+    config = config
+
     def __init__(self):
         self.name = self.__class__.__name__
         self.btc_balance = 0
