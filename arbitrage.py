@@ -120,7 +120,7 @@ class Arbitrer(object):
             weighted_sellprice = self.arbitrage_depth_opportunity(kask, kbid)
         if volume == 0 or buyprice == 0:
             return
-        perc2 = (1 - (volume - (profit / buyprice)) / volume) * 100
+        perc2 = (1 - (volume - (profit / weighted_buyprice)) / volume) * 100
         for observer in self.observers:
             observer.opportunity(profit, volume, buyprice, kask, sellprice, kbid,
                                  perc2, weighted_buyprice, weighted_sellprice)

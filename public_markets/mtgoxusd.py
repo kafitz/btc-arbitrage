@@ -22,7 +22,7 @@ class MtGoxUSD(Market):
         if data["result"] == "success":
             self.depth = self.format_depth(data["return"])
         else:
-            logging.error("%s - fetched data error" % (self.name))
+            logging.error("%s - depth data fetch error." % (self.name,))
 
     def sort_and_format(self, l, reverse=False):
         # sort list: for each dict in input list, get price key and sort by that
