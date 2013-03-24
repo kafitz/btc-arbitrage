@@ -45,15 +45,20 @@ class Arbitrer(object):
 
         buy_total = 0
         w_buyprice = 0
+        # For as long as we have bitcoin available, look for transactions we can make
         for i in range(mi + 1):
             price = self.depths[kask]["asks"][i]["price"]
             amount = min(max_amount, buy_total + self.depths[kask]["asks"][i]["amount"]) - buy_total
             if amount <= 0:
                 break
             buy_total += amount
-            if w_buyprice == 0:
+            if w_buyprice == 0: # Set the buy price on the first run
                 w_buyprice = price
             else:
+                # print "w_buyprice: " + str(w_buyprice)
+                # print "buy_total: " + str(buy_total)
+                # print "amount: " + str(amount)
+                # print "---------"
                 w_buyprice = (w_buyprice * (buy_total - amount) + price * amount) / buy_total
 
         sell_total = 0
@@ -61,7 +66,7 @@ class Arbitrer(object):
         for j in range(mj + 1):
             price = self.depths[kbid]["bids"][j]["price"]
             amount = min(max_amount, sell_total + self.depths[kbid]["bids"][j]["amount"]) - sell_total
-            if amount <= 0:
+            if amount < 0:
                 break
             sell_total += amount
             if w_sellprice == 0:
@@ -93,29 +98,24 @@ class Arbitrer(object):
                 if j >= len(self.depths[kbid]["bids"]) - 1:
                     break
                 j += 1
-        selling_indices = i
-        buying_indices = j
-        return selling_indices, buying_indices
+        max_selling_index = i
+        max_buying_index = j
+        return max_selling_index, max_buying_index
 
     def arbitrage_depth_opportunity(self, kask, kbid):
-        max_selling_indices, max_buying_indices = self.get_max_depth(kask, kbid)
+        maxi, maxj = self.get_max_depth(kask, kbid)
         best_profit = 0
-        best_selling_index, best_buying_index = (0, 0)
+        best_i, best_j = (0, 0)
         best_w_buyprice, best_w_sellprice = (0, 0)
         best_volume = 0
-        for selling_index in range(max_selling_indices + 1):
-            for buying_index in range(max_buying_indices + 1):
-                profit, volume, w_buyprice, w_sellprice = self.get_profit_for(selling_index, buying_index, kask, kbid)
+        for i in range(maxi + 1):
+            for j in range(maxj + 1):
+                profit, volume, w_buyprice, w_sellprice = self.get_profit_for(i, j, kask, kbid)
                 if profit >= 0 and profit >= best_profit:
                     best_profit = profit
                     best_volume = volume
-                    best_i, best_j = (selling_index, buying_index)
+                    best_i, best_j = (i, j)
                     best_w_buyprice, best_w_sellprice = (w_buyprice, w_sellprice)
-        # print kask
-        # print kbid
-        # print "Best profit: " + str(best_profit)
-        # print "Best buy: " + str(self.depths[kask]['asks'][best_i])
-        # print "Best sell: " + str(self.depths[kbid]['bids'][best_j])
         return best_profit, best_volume, self.depths[kask]["asks"][best_i]["price"],\
             self.depths[kbid]["bids"][best_j]["price"], best_w_buyprice, best_w_sellprice
 
