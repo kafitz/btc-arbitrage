@@ -1,5 +1,4 @@
 import public_markets
-import private_markets
 import observers
 import config
 import time
@@ -10,11 +9,9 @@ import json
 class Arbitrer(object):
     def __init__(self):
         self.markets = []
-        self.private_markets = []
         self.observers = []
         self.depths = {}
         self.init_markets(config.markets)
-        self.init_private_markets(config.private_markets)
         self.init_observers(config.observers)
 
     def init_markets(self, markets):
@@ -23,13 +20,6 @@ class Arbitrer(object):
             exec('import public_markets.' + market_name.lower())
             market = eval('public_markets.' + market_name.lower() + '.' + market_name + '()')
             self.markets.append(market)
-    
-    def init_private_markets(self, private_markets):
-        self.market_names = private_markets
-        for market_name in private_markets:
-            exec('import private_markets.' + market_name.lower())
-            private_market = eval('private_markets.' + market_name.lower() + '.' + market_name + '()')
-            self.markets.append(private_market)
 
     def init_observers(self, observers):
         self.observer_names = observers

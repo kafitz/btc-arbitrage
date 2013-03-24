@@ -27,6 +27,7 @@ class PrivateMtGox(Market):
         self.key = config.mtgox_key
         self.secret = config.mtgox_secret
         self.currency = "USD"
+        self.initials = "mtgx"
         #self.get_info()
 
     def _create_nonce(self):

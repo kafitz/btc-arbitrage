@@ -21,7 +21,8 @@ class PrivateBitcoinCentral(Market):
         self.name = self.__class__.__name__
         self.username = config.bitcoincentral_username
         self.password = config.bitcoincentral_password
-        self.currency = "EUR"
+        self.currency = "USD"
+        self.initials = "bctl"
         self.get_info()
 
     def _create_nonce(self):

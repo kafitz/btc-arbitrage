@@ -29,6 +29,7 @@ class PrivateBitfloor(Market):
         self.secret = config.bitfloor_secret
         self.passphrase = config.bitfloor_passphrase
         self.currency = "USD"
+        self.initials = "bflr"
         #self.get_info()
 
     def _create_nonce(self):
