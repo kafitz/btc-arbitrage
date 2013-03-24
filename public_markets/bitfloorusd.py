@@ -8,7 +8,7 @@ class bitfloorUSD(Market):
         super(bitfloorUSD, self).__init__("USD")
         self.update_rate = 25
         # {withdraw: amount bitcoins charged as network fee, exchange_rate: % for currency exchange}
-        self.fees = {'withdraw': 0, 'exchange_rate': 0.4}
+        self.fees = {'withdraw': 0, 'exchange_rate': 0.004}
 
     def update_depth(self):
         res = urllib2.urlopen('https://api.bitfloor.com/book/L2/1')

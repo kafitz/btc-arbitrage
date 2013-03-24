@@ -116,12 +116,12 @@ class Arbitrer(object):
             weighted_sellprice = self.arbitrage_depth_opportunity(kask, kbid)
         if volume == 0 or buyprice == 0:
             return
-        perc2 = (1 - (volume - (profit / weighted_buyprice)) / volume) * 100
-        if perc2 < float(config.perc_thresh):
+        percent_profit = (1 - (volume - (profit / weighted_buyprice)) / volume) * 100
+        if percent_profit < float(config.perc_thresh):
             return
         for observer in self.observers:
             observer.opportunity(profit, volume, buyprice, kask, sellprice, kbid,
-                                 perc2, weighted_buyprice, weighted_sellprice)
+                                 percent_profit, weighted_buyprice, weighted_sellprice)
 
     def update_depths(self):
         depths = {}
