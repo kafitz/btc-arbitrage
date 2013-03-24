@@ -69,45 +69,54 @@ class Arbitrer(object):
             else:
                 w_sellprice = (w_sellprice * (sell_total - amount) + price * amount) / sell_total
 
-        sell_total -= float(self.fees[kask]['withdraw'])
         profit = sell_total * w_sellprice - buy_total * w_buyprice
-        return profit, sell_total, w_buyprice, w_sellprice
+        # Account for transaction fees
+        buying_fees = self.fees[kask]
+        selling_fees = self.fees[kbid]
+        tx_fee_discount = 1 - (float(buying_fees['exchange_rate']) + float(selling_fees['exchange_rate']))
+        fee_adjusted_profit = profit * tx_fee_discount
+
+        return fee_adjusted_profit, sell_total, w_buyprice, w_sellprice
 
     def get_max_depth(self, kask, kbid):
         i = 0
         if len(self.depths[kbid]["bids"]) != 0 and len(self.depths[kask]["asks"]) != 0:
+            # Create a list of the indices of selling offer key/pairs (price, volume) that are less than the current max buying offer
             while self.depths[kask]["asks"][i]["price"] < self.depths[kbid]["bids"][0]["price"]:
                 if i >= len(self.depths[kask]["asks"]) - 1:
                     break
                 i += 1
         j = 0
         if len(self.depths[kask]["asks"]) != 0 and len(self.depths[kbid]["bids"]) != 0:
+            # Create a list of the indices of buying offer key/pairs that are less than the current maxium selling offer
             while self.depths[kask]["asks"][0]["price"] < self.depths[kbid]["bids"][j]["price"]:
                 if j >= len(self.depths[kbid]["bids"]) - 1:
                     break
                 j += 1
-        return i, j
+        selling_indices = i
+        buying_indices = j
+        return selling_indices, buying_indices
 
     def arbitrage_depth_opportunity(self, kask, kbid):
-        maxi, maxj = self.get_max_depth(kask, kbid)
+        max_selling_indices, max_buying_indices = self.get_max_depth(kask, kbid)
         best_profit = 0
-        best_i, best_j = (0, 0)
+        best_selling_index, best_buying_index = (0, 0)
         best_w_buyprice, best_w_sellprice = (0, 0)
         best_volume = 0
-        for i in range(maxi + 1):
-            for j in range(maxj + 1):
-                profit, volume, w_buyprice, w_sellprice = self.get_profit_for(i, j, kask, kbid)
+        for selling_index in range(max_selling_indices + 1):
+            for buying_index in range(max_buying_indices + 1):
+                profit, volume, w_buyprice, w_sellprice = self.get_profit_for(selling_index, buying_index, kask, kbid)
                 if profit >= 0 and profit >= best_profit:
                     best_profit = profit
                     best_volume = volume
-                    best_i, best_j = (i, j)
+                    best_i, best_j = (selling_index, buying_index)
                     best_w_buyprice, best_w_sellprice = (w_buyprice, w_sellprice)
-        # Account for transaction fees
-        buying_fees = self.fees[kask]
-        selling_fees = self.fees[kbid]
-        tx_fee_discount = 1 - (float(buying_fees['exchange_rate']) + float(selling_fees['exchange_rate']))
-        fee_adjusted_profit = best_profit * tx_fee_discount
-        return fee_adjusted_profit, best_volume, self.depths[kask]["asks"][best_i]["price"],\
+        # print kask
+        # print kbid
+        # print "Best profit: " + str(best_profit)
+        # print "Best buy: " + str(self.depths[kask]['asks'][best_i])
+        # print "Best sell: " + str(self.depths[kbid]['bids'][best_j])
+        return best_profit, best_volume, self.depths[kask]["asks"][best_i]["price"],\
             self.depths[kbid]["bids"][best_j]["price"], best_w_buyprice, best_w_sellprice
 
     def arbitrage_opportunity(self, kask, ask, kbid, bid):
