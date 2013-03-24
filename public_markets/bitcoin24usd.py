@@ -7,6 +7,8 @@ class Bitcoin24USD(Market):
     def __init__(self):
         super(Bitcoin24USD, self).__init__("USD")
         self.update_rate = 20
+        # {withdraw: amount bitcoins charged as network fee, exchange_rate: % for currency exchange}
+        self.fees = {'withdraw': 0, 'exchange_rate': 0}
 
     def update_depth(self):
         res = urllib2.urlopen('https://bitcoin-24.com/api/USD/orderbook.json')

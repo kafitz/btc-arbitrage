@@ -9,6 +9,8 @@ class CampBXUSD(Market):
         super(CampBXUSD, self).__init__("USD")
         self.update_rate = 25
         self.depth = {'asks': [{'price': 0, 'amount': 0}], 'bids': [{'price': 0, 'amount': 0}]}
+        # {withdraw: amount bitcoins charged as network fee, exchange_rate: % for currency exchange}
+        self.fees = {'withdraw': 0, 'exchange_rate': 0.55}
 
 
     def update_depth(self):

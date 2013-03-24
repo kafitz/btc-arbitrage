@@ -69,6 +69,7 @@ class Arbitrer(object):
             else:
                 w_sellprice = (w_sellprice * (sell_total - amount) + price * amount) / sell_total
 
+        sell_total -= float(self.fees[kask]['withdraw'])
         profit = sell_total * w_sellprice - buy_total * w_buyprice
         return profit, sell_total, w_buyprice, w_sellprice
 
@@ -101,25 +102,34 @@ class Arbitrer(object):
                     best_volume = volume
                     best_i, best_j = (i, j)
                     best_w_buyprice, best_w_sellprice = (w_buyprice, w_sellprice)
-        return best_profit, best_volume, self.depths[kask]["asks"][best_i]["price"],\
+        # Account for transaction fees
+        buying_fees = self.fees[kask]
+        selling_fees = self.fees[kbid]
+        tx_fee_discount = 1 - (float(buying_fees['exchange_rate']) + float(selling_fees['exchange_rate']))
+        fee_adjusted_profit = best_profit * tx_fee_discount
+        return fee_adjusted_profit, best_volume, self.depths[kask]["asks"][best_i]["price"],\
             self.depths[kbid]["bids"][best_j]["price"], best_w_buyprice, best_w_sellprice
 
     def arbitrage_opportunity(self, kask, ask, kbid, bid):
-        perc = (bid["price"] - ask["price"]) / bid["price"] * 100
+        # perc = (bid["price"] - ask["price"]) / bid["price"] * 100
         profit, volume, buyprice, sellprice, weighted_buyprice,\
             weighted_sellprice = self.arbitrage_depth_opportunity(kask, kbid)
         if volume == 0 or buyprice == 0:
             return
         perc2 = (1 - (volume - (profit / weighted_buyprice)) / volume) * 100
+        if perc2 < float(config.perc_thresh):
+            return
         for observer in self.observers:
             observer.opportunity(profit, volume, buyprice, kask, sellprice, kbid,
                                  perc2, weighted_buyprice, weighted_sellprice)
 
     def update_depths(self):
         depths = {}
+        fees = {}
         for market in self.markets:
             depths[market.name] = market.get_depth()
-        return depths
+            fees[market.name] = market.fees
+        return depths, fees
 
     def tickers(self):
         for market in self.markets:
@@ -152,7 +162,7 @@ class Arbitrer(object):
                     continue
                 market1 = self.depths[kmarket1]
                 market2 = self.depths[kmarket2]
-                # spammy debug command for testing if there is no market liquidity
+                # spammy debug command for testing if there is market liquidity
                 # print "Is " + kmarket1 + " at " + str(market1["asks"][0]['price']) + " less than " + kmarket2 + " at " + str(market2["bids"][0]['price']) + "?"
                 if float(market1["asks"][0]['price']) < float(market2["bids"][0]['price']):
                     self.arbitrage_opportunity(kmarket1, market1["asks"][0], kmarket2, market2["bids"][0])
@@ -162,10 +172,10 @@ class Arbitrer(object):
 
     def loop(self):
         while True:
-            self.depths = self.update_depths()
+            self.depths, self.fees = self.update_depths()
             self.tickers()
             self.tick()
-            time.sleep(30)
+            time.sleep(20)
 
 def main():
     import argparse

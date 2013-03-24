@@ -9,6 +9,7 @@ class BitstampUSD(Market):
         # bitcoin central maximum call / day = 5000
         # keep 2500 for other operations
         self.update_rate = 24 * 60 * 60 / 2500
+        self.fees = {'withdraw': 0, 'exchange_rate': 0.5}
 
     def update_depth(self):
         res = urllib2.urlopen('https://www.bitstamp.net/api/order_book/')
