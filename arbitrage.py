@@ -103,21 +103,22 @@ class Arbitrer(object):
         return max_selling_index, max_buying_index
 
     def arbitrage_depth_opportunity(self, kask, kbid):
-        maxi, maxj = self.get_max_depth(kask, kbid)
+        # Get the maximum index of the overlap
+        max_selling_indices, max_buying_indices = self.get_max_depth(kask, kbid)
         best_profit = 0
-        best_i, best_j = (0, 0)
+        best_selling_index, best_buying_index = (0, 0)
         best_w_buyprice, best_w_sellprice = (0, 0)
         best_volume = 0
-        for i in range(maxi + 1):
-            for j in range(maxj + 1):
-                profit, volume, w_buyprice, w_sellprice = self.get_profit_for(i, j, kask, kbid)
+        for selling_index in range(max_selling_indices + 1):
+            for buying_index in range(max_buying_indices + 1):
+                profit, volume, w_buyprice, w_sellprice = self.get_profit_for(selling_index, buying_index, kask, kbid)
                 if profit >= 0 and profit >= best_profit:
                     best_profit = profit
                     best_volume = volume
-                    best_i, best_j = (i, j)
                     best_w_buyprice, best_w_sellprice = (w_buyprice, w_sellprice)
-        return best_profit, best_volume, self.depths[kask]["asks"][best_i]["price"],\
-            self.depths[kbid]["bids"][best_j]["price"], best_w_buyprice, best_w_sellprice
+                    best_selling_index, best_buying_index = (selling_index, buying_index)
+        return best_profit, best_volume, self.depths[kask]["asks"][best_selling_index]["price"],\
+            self.depths[kbid]["bids"][best_buying_index]["price"], best_w_buyprice, best_w_sellprice
 
     def arbitrage_opportunity(self, kask, ask, kbid, bid):
         # perc = (bid["price"] - ask["price"]) / bid["price"] * 100
