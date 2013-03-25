@@ -28,25 +28,28 @@ class Arbitrer(object):
             observer = eval('observers.' + observer_name.lower() + '.' + observer_name + '()')
             self.observers.append(observer)
 
-    def get_profit_for(self, mi, mj, kask, kbid):
-        # check to make sure input selling price is actually greater than asking price
-        if self.depths[kask]["asks"][mi]["price"] >= self.depths[kbid]["bids"][mj]["price"]:
+    def get_profit_for(self, selling_index, buying_index, kask, kbid):
+        # check to make sure input buying price actually lower than selling price
+        if self.depths[kask]["asks"][selling_index]["price"] >= self.depths[kbid]["bids"][buying_index]["price"]:
             return 0, 0, 0, 0
 
         # get the maximum amount of asks or bids that can current be filled by
         # the market within our spread
         max_amount_buy = 0
-        for i in range(mi + 1):
+        for i in range(selling_index + 1):
             max_amount_buy += self.depths[kask]["asks"][i]["amount"]
         max_amount_sell = 0
-        for j in range(mj + 1):
+        for j in range(buying_index + 1):
             max_amount_sell += self.depths[kbid]["bids"][j]["amount"]
-        max_amount = min(max_amount_buy, max_amount_sell, config.max_tx_volume)
+        purchase_cap = float(config.max_purchase)
+        # Determine an approximate maximum volume to buy by multiplying cofig value by lowest market price
+        est_volume = purchase_cap / float(self.depths[kask]["asks"][i]["price"])
+        max_amount = min(max_amount_buy, max_amount_sell, est_volume)
 
         buy_total = 0
         w_buyprice = 0
         # For as long as we have bitcoin available, look for transactions we can make
-        for i in range(mi + 1):
+        for i in range(selling_index + 1):
             price = self.depths[kask]["asks"][i]["price"]
             amount = min(max_amount, buy_total + self.depths[kask]["asks"][i]["amount"]) - buy_total
             if amount <= 0:
@@ -55,15 +58,10 @@ class Arbitrer(object):
             if w_buyprice == 0: # Set the buy price on the first run
                 w_buyprice = price
             else:
-                # print "w_buyprice: " + str(w_buyprice)
-                # print "buy_total: " + str(buy_total)
-                # print "amount: " + str(amount)
-                # print "---------"
                 w_buyprice = (w_buyprice * (buy_total - amount) + price * amount) / buy_total
-
         sell_total = 0
         w_sellprice = 0
-        for j in range(mj + 1):
+        for j in range(buying_index + 1):
             price = self.depths[kbid]["bids"][j]["price"]
             amount = min(max_amount, sell_total + self.depths[kbid]["bids"][j]["amount"]) - sell_total
             if amount < 0:
@@ -75,13 +73,7 @@ class Arbitrer(object):
                 w_sellprice = (w_sellprice * (sell_total - amount) + price * amount) / sell_total
 
         profit = sell_total * w_sellprice - buy_total * w_buyprice
-        # Account for transaction fees
-        buying_fees = self.fees[kask]
-        selling_fees = self.fees[kbid]
-        tx_fee_discount = 1 - (float(buying_fees['exchange_rate']) + float(selling_fees['exchange_rate']))
-        fee_adjusted_profit = profit * tx_fee_discount
-
-        return fee_adjusted_profit, sell_total, w_buyprice, w_sellprice
+        return profit, sell_total, w_buyprice, w_sellprice
 
     def get_max_depth(self, kask, kbid):
         i = 0
@@ -117,20 +109,30 @@ class Arbitrer(object):
                     best_volume = volume
                     best_w_buyprice, best_w_sellprice = (w_buyprice, w_sellprice)
                     best_selling_index, best_buying_index = (selling_index, buying_index)
-        return best_profit, best_volume, self.depths[kask]["asks"][best_selling_index]["price"],\
-            self.depths[kbid]["bids"][best_buying_index]["price"], best_w_buyprice, best_w_sellprice
+        # Account for transaction fees
+        buying_fees = self.fees[kask]
+        selling_fees = self.fees[kbid]
+        fee_adjusted_volume = (1 - float(buying_fees['exchange_rate'])) * best_volume # Volume2*adjusted volume; Volume1*original volume
+        sale_total = fee_adjusted_volume * best_w_sellprice 
+        buy_total = best_volume * best_w_buyprice
+        tx_fee_discount = 1 - float(selling_fees['exchange_rate'])
+        percent_profit = ((sale_total * tx_fee_discount) / buy_total - 1) * 100
+        fee_adjusted_profit = (sale_total * tx_fee_discount) - buy_total
+        return fee_adjusted_profit, fee_adjusted_volume, percent_profit, self.depths[kask]["asks"][best_selling_index]["price"], self.depths[kbid]["bids"][best_buying_index]["price"], best_w_buyprice, best_w_sellprice
 
     def arbitrage_opportunity(self, kask, ask, kbid, bid):
         # perc = (bid["price"] - ask["price"]) / bid["price"] * 100
-        profit, volume, buyprice, sellprice, weighted_buyprice,\
+        profit, purchase_volume, percent_profit, buyprice, sellprice, weighted_buyprice,\
             weighted_sellprice = self.arbitrage_depth_opportunity(kask, kbid)
-        if volume == 0 or buyprice == 0:
+        if purchase_volume == 0 or buyprice == 0:
             return
-        percent_profit = (1 - (volume - (profit / weighted_buyprice)) / volume) * 100
+        # maxme_percent_profit is original calculation however it seems off so a simpler one replaces it in arbitrage_depth_opportunity
+        # maxme_percent_profit = (1 - (volume - (profit / weighted_buyprice)) / volume) * 100
+        
         if percent_profit < float(config.perc_thresh):
             return
         for observer in self.observers:
-            observer.opportunity(profit, volume, buyprice, kask, sellprice, kbid,
+            observer.opportunity(profit, purchase_volume, buyprice, kask, sellprice, kbid,
                                  percent_profit, weighted_buyprice, weighted_sellprice)
 
     def update_depths(self):
