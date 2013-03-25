@@ -21,7 +21,7 @@ Subject: %(subject)s
 
 
 class Emailer(Observer):
-    def opportunity(self, profit, volume, buyprice, kask, sellprice, kbid, perc, weighted_buyprice, weighted_sellprice):
+    def opportunity(self, profit, volume, buyprice, kask, sellprice, kbid, perc, weighted_buyprice, weighted_sellprice, available_volume, purchase_cap):
         if profit > config.profit_thresh and perc > config.perc_thresh:
             message = """profit: %f EUR with volume: %f BTC
 buy at %.4f (%s) sell at %.4f (%s) ~%.2f%%

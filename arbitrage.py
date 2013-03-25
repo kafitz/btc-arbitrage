@@ -31,7 +31,7 @@ class Arbitrer(object):
     def get_profit_for(self, selling_index, buying_index, kask, kbid):
         # check to make sure input buying price actually lower than selling price
         if self.depths[kask]["asks"][selling_index]["price"] >= self.depths[kbid]["bids"][buying_index]["price"]:
-            return 0, 0, 0, 0
+            return 0, 0, 0, 0, 0
 
         # get the maximum amount of asks or bids that can current be filled by
         # the market within our spread
@@ -48,10 +48,12 @@ class Arbitrer(object):
 
         buy_total = 0
         w_buyprice = 0
+        total_available_volume = 0
         # For as long as we have bitcoin available, look for transactions we can make
         for i in range(selling_index + 1):
             price = self.depths[kask]["asks"][i]["price"]
             amount = min(max_amount, buy_total + self.depths[kask]["asks"][i]["amount"]) - buy_total
+            total_available_volume += self.depths[kask]["asks"][i]["amount"]
             if amount <= 0:
                 break
             buy_total += amount
@@ -73,7 +75,7 @@ class Arbitrer(object):
                 w_sellprice = (w_sellprice * (sell_total - amount) + price * amount) / sell_total
 
         profit = sell_total * w_sellprice - buy_total * w_buyprice
-        return profit, sell_total, w_buyprice, w_sellprice
+        return profit, sell_total, w_buyprice, w_sellprice, total_available_volume
 
     def get_max_depth(self, kask, kbid):
         i = 0
@@ -103,12 +105,13 @@ class Arbitrer(object):
         best_volume = 0
         for selling_index in range(max_selling_indices + 1):
             for buying_index in range(max_buying_indices + 1):
-                profit, volume, w_buyprice, w_sellprice = self.get_profit_for(selling_index, buying_index, kask, kbid)
+                profit, volume, w_buyprice, w_sellprice, total_available_volume = self.get_profit_for(selling_index, buying_index, kask, kbid)
                 if profit >= 0 and profit >= best_profit:
                     best_profit = profit
                     best_volume = volume
                     best_w_buyprice, best_w_sellprice = (w_buyprice, w_sellprice)
                     best_selling_index, best_buying_index = (selling_index, buying_index)
+                    available_volume = total_available_volume
         # Account for transaction fees
         buying_fees = self.fees[kask]
         selling_fees = self.fees[kbid]
@@ -118,12 +121,13 @@ class Arbitrer(object):
         tx_fee_discount = 1 - float(selling_fees['exchange_rate'])
         percent_profit = ((sale_total * tx_fee_discount) / buy_total - 1) * 100
         fee_adjusted_profit = (sale_total * tx_fee_discount) - buy_total
-        return fee_adjusted_profit, fee_adjusted_volume, percent_profit, self.depths[kask]["asks"][best_selling_index]["price"], self.depths[kbid]["bids"][best_buying_index]["price"], best_w_buyprice, best_w_sellprice
+        return fee_adjusted_profit, fee_adjusted_volume, percent_profit, self.depths[kask]["asks"][best_selling_index]["price"],\
+            self.depths[kbid]["bids"][best_buying_index]["price"], best_w_buyprice, best_w_sellprice, available_volume
 
     def arbitrage_opportunity(self, kask, ask, kbid, bid):
         # perc = (bid["price"] - ask["price"]) / bid["price"] * 100
         profit, purchase_volume, percent_profit, buyprice, sellprice, weighted_buyprice,\
-            weighted_sellprice = self.arbitrage_depth_opportunity(kask, kbid)
+            weighted_sellprice, available_volume = self.arbitrage_depth_opportunity(kask, kbid)
         if purchase_volume == 0 or buyprice == 0:
             return
         # maxme_percent_profit is original calculation however it seems off so a simpler one replaces it in arbitrage_depth_opportunity
@@ -133,7 +137,7 @@ class Arbitrer(object):
             return
         for observer in self.observers:
             observer.opportunity(profit, purchase_volume, buyprice, kask, sellprice, kbid,
-                                 percent_profit, weighted_buyprice, weighted_sellprice)
+                                 percent_profit, weighted_buyprice, weighted_sellprice, available_volume, config.max_purchase)
 
     def update_depths(self):
         depths = {}

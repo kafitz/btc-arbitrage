@@ -41,7 +41,7 @@ class TraderBot(Observer):
         for kclient in self.clients:
             self.clients[kclient].get_info()
 
-    def opportunity(self, profit, volume, buyprice, kask, sellprice, kbid, perc, weighted_buyprice, weighted_sellprice):
+    def opportunity(self, profit, volume, buyprice, kask, sellprice, kbid, perc, weighted_buyprice, weighted_sellprice, available_volume, purchase_cap):
         if profit < self.profit_thresh or perc < self.perc_thresh:
             return
         if kask not in self.clients:
