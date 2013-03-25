@@ -19,7 +19,7 @@ class MtGoxUSD(Market):
             jsonstr = res.read()
             data = json.loads(jsonstr) 
         except Exception:
-            logging.error("%s - Can't parse json: %s" % (self.name, jsonstr))
+            pass # caught below
         if data["result"] == "success":
             self.depth = self.format_depth(data["return"])
         else:

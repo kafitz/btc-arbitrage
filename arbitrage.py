@@ -118,6 +118,9 @@ class Arbitrer(object):
         fee_adjusted_volume = (1 - float(buying_fees['exchange_rate'])) * best_volume # Volume2*adjusted volume; Volume1*original volume
         sale_total = fee_adjusted_volume * best_w_sellprice 
         buy_total = best_volume * best_w_buyprice
+        # Fix divide by 0 error
+        if buy_total == 0:
+            return 0, 0, 0, 0, 0, 0, 0, 0
         tx_fee_discount = 1 - float(selling_fees['exchange_rate'])
         percent_profit = ((sale_total * tx_fee_discount) / buy_total - 1) * 100
         fee_adjusted_profit = (sale_total * tx_fee_discount) - buy_total
